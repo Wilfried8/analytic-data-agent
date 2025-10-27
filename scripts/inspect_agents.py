@@ -2,13 +2,7 @@
 
 import argparse
 import json
-import sys
-from pathlib import Path
 from google.cloud import geminidataanalytics
-
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from app.agent_service import get_agent, list_agents
 from app.config import load_settings
