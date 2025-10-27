@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+
+# Virtual environments
+.venv
+.env
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Project artifacts
+chat_transcript.json
+index.html
+*.log
+*.tmp
+*.sqlite*

@@ -1,0 +1,83 @@
+system_instruction:
+  - You are a data analyst specializing in senior residence management.
+  - You analyze data stored in BigQuery under the dataset `test_demo`, which includes resident information and apartment billing.
+  - When answering, use clear and concise english sentences.
+  - Always ensure that your analysis focuses on business insights, such as resident occupancy, billing status, and payment delays.
+  - Use only the tables available in the dataset `test_demo`.
+  - Never invent data or reference external sources.
+  - If a question cannot be answered with the available columns, respond politely that the data is not available.
+  - When joining tables, use `resident_id` as the key between `residents` and `facturations`.
+  - For date-based analyses, prefer the fields `date_entree` in residents and `date_facture` in facturations.
+
+tables:
+  residents:
+    description: "Contains information about the residents."
+    fields:
+      resident_id: "Unique identifier for each resident."
+      nom: "Resident's last name."
+      prenom: "Resident's first name."
+      date_entree: "The date when the resident entered the residence."
+      appartement_id: "Identifier of the apartment occupied by the resident."
+      statut: "Status of the resident (e.g., Actif, Sorti)."
+
+  facturations:
+    description: "Contains information about invoices issued to residents for their accommodation and services."
+    fields:
+      facture_id: "Unique identifier for each invoice."
+      resident_id: "Reference to the resident associated with this invoice."
+      date_facture: "Date when the invoice was issued."
+      montant_ttc: "Total amount (including tax) billed to the resident."
+      statut_paiement: "Indicates whether the invoice is Payée, En attente, or En retard."
+      mode_paiement: "Payment method used by the resident (Prélèvement, Carte, Virement, etc.)."
+
+join_instructions:
+  goal: "Combine residents and their billing data to analyze occupancy rates, payment trends, and resident behavior."
+  method: "INNER JOIN the tables on resident_id."
+  keys:
+    - "resident_id"
+
+golden_queries:
+  - natural_language_query: "Montre le montant total facturé à chaque résident actif."
+    sql_query: |
+      SELECT
+          r.nom,
+          r.prenom,
+          SUM(f.montant_ttc) AS total_factures
+      FROM
+          `test_demo.residents` AS r
+      INNER JOIN
+          `test_demo.facturations` AS f
+      ON
+          r.resident_id = f.resident_id
+      WHERE
+          r.statut = 'Actif'
+      GROUP BY
+          r.nom, r.prenom;
+
+  - natural_language_query: "Quels résidents ont des factures en retard et depuis quand ?"
+    sql_query: |
+      SELECT
+          r.nom,
+          r.prenom,
+          f.date_facture,
+          f.montant_ttc,
+          f.statut_paiement
+      FROM
+          `test_demo.residents` AS r
+      INNER JOIN
+          `test_demo.facturations` AS f
+      ON
+          r.resident_id = f.resident_id
+      WHERE
+          f.statut_paiement = 'En retard'
+      ORDER BY
+          f.date_facture DESC;
+
+  - natural_language_query: "Combien de résidents sont encore actifs dans la résidence ?"
+    sql_query: |
+      SELECT
+          COUNT(*) AS nb_residents_actifs
+      FROM
+          `test_demo.residents`
+      WHERE
+          statut = 'Actif';
