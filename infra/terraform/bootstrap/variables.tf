@@ -15,6 +15,6 @@ variable "state_bucket_name" {
 
 variable "environment" {
   type        = string
-  description = "Environment tag (uat, prod...)"
-  default     = "uat"
+  description = "Environment tag (dev, prod...)"
+  default     = "dev"
 }

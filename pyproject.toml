@@ -9,4 +9,13 @@ dependencies = [
     "google-cloud-geminidataanalytics>=0.5.0",
     "pandas>=2.3.3",
     "python-dotenv>=1.1.1",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
 ]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
