@@ -1,5 +1,5 @@
 variable "project_id" {
-  description = "GCP project ID for the UAT environment."
+  description = "GCP project ID for the dev environment."
   type        = string
 }
 
@@ -12,13 +12,13 @@ variable "region" {
 variable "run_service_account_id" {
   description = "Service account ID (without domain) for Cloud Run."
   type        = string
-  default     = "analytics-agent-run-uat"
+  default     = "analytics-agent-run-dev"
 }
 
 variable "run_service_name" {
   description = "Cloud Run service name."
   type        = string
-  default     = "analytics-agent-uat"
+  default     = "analytics-agent-dev"
 }
 
 variable "run_image" {

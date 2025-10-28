@@ -1,0 +1,29 @@
+# substitutions:
+#   _ENV: "dev"
+#   _REGION: "europe-west1"
+#   # Le nom du repo Artifact Registry doit exister ou être créé préalablement
+#   _REPO: "analytics-agents-dev"
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/analytics-agent:${_ENV}",
+        "."
+      ]
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/analytics-agent:${_ENV}"
+      ]
+
+images:
+  - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/analytics-agent:${_ENV}"
+
+tags:
+  - "analytics-agent"
+  - "${_ENV}"

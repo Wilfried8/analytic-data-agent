@@ -23,7 +23,7 @@ variable "storage_class" {
 variable "force_destroy" {
   description = "If true, delete the bucket even if it contains objects."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "versioning_enabled" {
