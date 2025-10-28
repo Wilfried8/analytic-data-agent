@@ -25,3 +25,13 @@ module "state_bucket" {
     environment  = var.environment
   }
 }
+
+module "analytics_agents_repo" {
+  source          = "../modules/artifact_registry"
+  project_id      = var.project_id
+  region          = var.region
+  repository_name = "analytics-agents-dev"
+  labels = {
+    env = "dev"
+  }
+}

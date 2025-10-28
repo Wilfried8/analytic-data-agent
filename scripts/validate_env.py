@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 from app.config import load_settings
 
-def main():
+
+def main() -> None:
     try:
         settings = load_settings()
-    except Exception as err:
-        print(f"Invalide env: {err}")
-        raise SystemExit(1)
+    except Exception as err:  # noqa: BLE001 - surface raw error for debugging
+        print(f"❌ Invalid environment: {err}")
+        raise SystemExit(1) from err
     else:
-        print("✅ env ok")
-        print(settings)    
-        
-if __name__== "__main__":
+        print("✅ Environment configuration looks good.")
+        print(settings)
+
+
+if __name__ == "__main__":
     main()

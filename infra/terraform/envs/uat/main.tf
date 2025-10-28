@@ -18,11 +18,14 @@ module "run_service_account" {
   source     = "../../modules/service_account"
   project_id = var.project_id
   account_id = var.run_service_account_id
-  display_name = "Cloud Run service account (UAT)"
+  display_name = "Cloud Run service account (dev)"
   project_roles = [
     "roles/run.invoker",
     "roles/bigquery.dataViewer",
-    "roles/genaihq.dataAgentUser",
+    "roles/bigquery.user",
+    "roles/aiplatform.user",
+    "roles/iam.serviceAccountUser",
+    "roles/cloudaicompanion.user",
   ]
 }
 
@@ -34,8 +37,8 @@ module "cloud_run_service" {
   image           = var.run_image
   service_account = module.run_service_account.email
   env_vars        = var.run_env_vars
-  allow_unauthenticated = false
+  allow_unauthenticated = true
   labels = {
-    environment = "uat"
+    environment = "dev"
   }
 }
