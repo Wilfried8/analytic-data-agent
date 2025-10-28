@@ -2,6 +2,8 @@
 
 Tooling and scripts to manage a Gemini Data Analytics agent backed by BigQuery tables for the senior residence use case.
 
+> Production deployment guidance is available in `docs/deployment.md`.
+
 ### Prerequisites
 - Python 3.11+
 - `uv` (recommended) or `pip`
@@ -31,8 +33,3 @@ Tooling and scripts to manage a Gemini Data Analytics agent backed by BigQuery t
 - `scripts/inspect_agents.py` – inspect a single agent or list all agents in the project/location.
 
 Run scripts via `uv run python scripts/<script>.py` after activating the virtual environment.
-
-### Configuration
-- System instructions live in `system_instruction.yml`.
-- Environment variables are documented in `.env.example`.
-- Generated artifacts (chat transcripts, chart previews) are ignored by default. Add them to version control only if needed.
