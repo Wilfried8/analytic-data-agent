@@ -26,6 +26,8 @@ module "run_service_account" {
     "roles/aiplatform.user",
     "roles/iam.serviceAccountUser",
     "roles/cloudaicompanion.user",
+    "roles/aiplatform.user",
+    "roles/owner"
   ]
 }
 
