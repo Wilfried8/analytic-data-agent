@@ -9,7 +9,9 @@ from app.config import load_settings
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Inspect Gemini Data Analytics agents.")
+    parser = argparse.ArgumentParser(
+        description="Inspect Gemini Data Analytics agents."
+    )
     parser.add_argument(
         "--all",
         action="store_true",
@@ -27,7 +29,11 @@ def main() -> None:
     if args.all:
         agents = list_agents(settings)
         if args.json:
-            print(json.dumps([agent_to_dict(agent) for agent in agents], indent=2, default=str))
+            print(
+                json.dumps(
+                    [agent_to_dict(agent) for agent in agents], indent=2, default=str
+                )
+            )
         else:
             for agent in agents:
                 print_summary(agent)

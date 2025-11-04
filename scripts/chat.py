@@ -13,7 +13,9 @@ def main() -> None:
         "--conversation-id",
         help="Existing conversation identifier; defaults to a generated ID.",
     )
-    parser.add_argument("--preview", action="store_true", help="Enable chart preview server.")
+    parser.add_argument(
+        "--preview", action="store_true", help="Enable chart preview server."
+    )
     parser.add_argument(
         "--interactive",
         action="store_true",
