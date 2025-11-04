@@ -20,7 +20,9 @@ def _load_system_instruction(path: Path) -> str:
         raise RuntimeError(f"System instruction file not found: {path}") from exc
 
 
-def build_datasource_references(settings: Settings) -> geminidataanalytics.DatasourceReferences:
+def build_datasource_references(
+    settings: Settings,
+) -> geminidataanalytics.DatasourceReferences:
     residents_ref = geminidataanalytics.BigQueryTableReference(
         project_id=settings.project_id,
         dataset_id=settings.dataset,
@@ -89,7 +91,9 @@ def update_agent(settings: Settings) -> geminidataanalytics.DataAgent:
     )
     data_agent = _build_data_agent(settings)
     data_agent.name = name
-    update_mask = field_mask_pb2.FieldMask(paths=["data_analytics_agent.published_context"])
+    update_mask = field_mask_pb2.FieldMask(
+        paths=["data_analytics_agent.published_context"]
+    )
     response = client.update_data_agent(
         request=geminidataanalytics.UpdateDataAgentRequest(
             data_agent=data_agent,
@@ -125,7 +129,9 @@ def get_agent(settings: Settings) -> geminidataanalytics.DataAgent | None:
         settings.project_id, settings.location, settings.data_agent_id
     )
     try:
-        return client.get_data_agent(request=geminidataanalytics.GetDataAgentRequest(name=name))
+        return client.get_data_agent(
+            request=geminidataanalytics.GetDataAgentRequest(name=name)
+        )
     except exceptions.NotFound:
         return None
 
@@ -133,13 +139,21 @@ def get_agent(settings: Settings) -> geminidataanalytics.DataAgent | None:
 def list_agents(settings: Settings) -> list[geminidataanalytics.DataAgent]:
     client = geminidataanalytics.DataAgentServiceClient()
     parent = client.common_location_path(settings.project_id, settings.location)
-    return list(client.list_data_agents(request=geminidataanalytics.ListDataAgentsRequest(parent=parent)))
+    return list(
+        client.list_data_agents(
+            request=geminidataanalytics.ListDataAgentsRequest(parent=parent)
+        )
+    )
 
 
-def delete_agent(settings: Settings, agent_id: str | None = None, *, force: bool = False) -> bool:
+def delete_agent(
+    settings: Settings, agent_id: str | None = None, *, force: bool = False
+) -> bool:
     client = geminidataanalytics.DataAgentServiceClient()
     agent_identifier = agent_id or settings.data_agent_id
-    name = client.data_agent_path(settings.project_id, settings.location, agent_identifier)
+    name = client.data_agent_path(
+        settings.project_id, settings.location, agent_identifier
+    )
     try:
         response = client.delete_data_agent(
             request=geminidataanalytics.DeleteDataAgentRequest(name=name)
@@ -153,5 +167,7 @@ def delete_agent(settings: Settings, agent_id: str | None = None, *, force: bool
     except exceptions.FailedPrecondition as exc:
         if not force:
             raise
-        logger.warning("Deletion failed due to state=%s; ignoring because force=True", exc)
+        logger.warning(
+            "Deletion failed due to state=%s; ignoring because force=True", exc
+        )
         return False

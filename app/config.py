@@ -54,9 +54,11 @@ def load_settings(dotenv: bool = True) -> Settings:
             )
         credentials_path = candidate
 
-    system_instruction_path = Path(
-        os.getenv("SYSTEM_INSTRUCTION_PATH", "system_instruction.yml")
-    ).expanduser().resolve()
+    system_instruction_path = (
+        Path(os.getenv("SYSTEM_INSTRUCTION_PATH", "system_instruction.yml"))
+        .expanduser()
+        .resolve()
+    )
     if not system_instruction_path.is_file():
         raise RuntimeError(
             f"System instruction file not found at {system_instruction_path}. "

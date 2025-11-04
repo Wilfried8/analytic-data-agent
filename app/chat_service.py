@@ -34,7 +34,9 @@ def ensure_conversation(
         )
         return client.create_conversation(
             request=geminidataanalytics.CreateConversationRequest(
-                parent=client.common_location_path(settings.project_id, settings.location),
+                parent=client.common_location_path(
+                    settings.project_id, settings.location
+                ),
                 conversation_id=conversation_id,
                 conversation=conversation,
             )
@@ -54,8 +56,10 @@ def interactive_chat(
         raise ValueError("exit_keyword must not be empty.")
 
     ensure_conversation(settings, conversation_id)
-    print("Interactive chat started. Type your messages; enter"
-          f" '{exit_keyword}' to exit.")
+    print(
+        "Interactive chat started. Type your messages; enter"
+        f" '{exit_keyword}' to exit."
+    )
     transcript: List[dict] = []
 
     try:

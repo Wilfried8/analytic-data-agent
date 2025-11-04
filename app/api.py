@@ -8,7 +8,13 @@ from google.api_core import exceptions as gcloud_exceptions
 from google.protobuf.json_format import MessageToDict
 from pydantic import BaseModel
 
-from app.agent_service import create_agent, delete_agent, get_agent, list_agents, update_agent
+from app.agent_service import (
+    create_agent,
+    delete_agent,
+    get_agent,
+    list_agents,
+    update_agent,
+)
 from app.chat_service import scripted_chat
 from app.config import Settings, load_settings
 
