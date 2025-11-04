@@ -19,3 +19,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["app"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.3",
+]

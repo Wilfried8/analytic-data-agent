@@ -2,8 +2,6 @@
 
 import argparse
 import uuid
-import sys
-from pathlib import Path
 
 from app.chat_service import interactive_chat, scripted_chat
 from app.config import load_settings
