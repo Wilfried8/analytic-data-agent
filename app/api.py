@@ -1,5 +1,3 @@
-"""FastAPI entrypoint exposing the Gemini Data Analytics agent."""
-
 from __future__ import annotations
 
 import uuid
@@ -13,6 +11,8 @@ from pydantic import BaseModel
 from app.agent_service import create_agent, delete_agent, get_agent, list_agents, update_agent
 from app.chat_service import scripted_chat
 from app.config import Settings, load_settings
+
+"""FastAPI entrypoint exposing the Gemini Data Analytics agent."""
 
 app = FastAPI(title="Analytics Data Agent", version="0.1.0")
 _settings: Optional[Settings] = None

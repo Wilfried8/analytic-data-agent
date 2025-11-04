@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-"""Helpers to interact with Gemini Data Analytics chat streams."""
-
 import json
 from typing import List, Optional, Sequence, Union
 
 from google.cloud import geminidataanalytics
+
+"""Helpers to interact with Gemini Data Analytics chat streams."""
 
 
 def _capture_text(resp) -> str:
