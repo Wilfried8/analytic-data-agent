@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import Body, FastAPI, HTTPException, Response
 from google.api_core import exceptions as gcloud_exceptions
 from google.protobuf.json_format import MessageToDict
 from pydantic import BaseModel
@@ -40,6 +40,10 @@ class AgentSyncResponse(BaseModel):
     name: str
     created: str
     updated: Optional[str]
+
+
+class AgentCreateRequest(BaseModel):
+    data_agent_id: Optional[str] = None
 
 
 def get_settings() -> Settings:
@@ -88,11 +92,16 @@ def list_agents_endpoint():
 
 
 @app.post("/agent", response_model=AgentSyncResponse, tags=["agent"], status_code=201)
-def create_agent_endpoint():
+def create_agent_endpoint(
+    payload: AgentCreateRequest | None = Body(default=None),
+):
     """Create the data agent and return its metadata."""
     settings = get_settings()
+    requested_id = None
+    if payload and payload.data_agent_id:
+        requested_id = payload.data_agent_id.strip() or None
     try:
-        agent = create_agent(settings)
+        agent = create_agent(settings, data_agent_id=requested_id)
     except gcloud_exceptions.AlreadyExists as exc:
         raise HTTPException(status_code=409, detail="Agent already exists") from exc
     except gcloud_exceptions.GoogleAPICallError as exc:
