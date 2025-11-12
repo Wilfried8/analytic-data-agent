@@ -68,13 +68,16 @@ def _maybe_await_operation(response: Any) -> Any:
     return response
 
 
-def create_agent(settings: Settings) -> geminidataanalytics.DataAgent:
+def create_agent(
+    settings: Settings, data_agent_id: str | None = None
+) -> geminidataanalytics.DataAgent:
     """Create the data agent. Raises AlreadyExists if the agent is present."""
     client = geminidataanalytics.DataAgentServiceClient()
     parent = client.common_location_path(settings.project_id, settings.location)
+    agent_identifier = data_agent_id or settings.data_agent_id
     request = geminidataanalytics.CreateDataAgentRequest(
         parent=parent,
-        data_agent_id=settings.data_agent_id,
+        data_agent_id=agent_identifier,
         data_agent=_build_data_agent(settings),
     )
     response = client.create_data_agent(request=request)
@@ -83,11 +86,14 @@ def create_agent(settings: Settings) -> geminidataanalytics.DataAgent:
     return agent
 
 
-def update_agent(settings: Settings) -> geminidataanalytics.DataAgent:
+def update_agent(
+    settings: Settings, data_agent_id: str | None = None
+) -> geminidataanalytics.DataAgent:
     """Update the existing data agent definition."""
     client = geminidataanalytics.DataAgentServiceClient()
+    agent_identifier = data_agent_id or settings.data_agent_id
     name = client.data_agent_path(
-        settings.project_id, settings.location, settings.data_agent_id
+        settings.project_id, settings.location, agent_identifier
     )
     data_agent = _build_data_agent(settings)
     data_agent.name = name
@@ -109,18 +115,19 @@ def create_or_update_agent(
     settings: Settings,
     *,
     allow_update: bool = True,
+    data_agent_id: str | None = None,
 ) -> geminidataanalytics.DataAgent:
     """Create the data agent. Optionally update it if it already exists."""
     try:
-        return create_agent(settings)
+        return create_agent(settings, data_agent_id=data_agent_id)
     except exceptions.AlreadyExists:
         if not allow_update:
             raise
         logger.info(
             "Agent %s already exists; attempting update.",
-            settings.data_agent_id,
+            data_agent_id or settings.data_agent_id,
         )
-        return update_agent(settings)
+        return update_agent(settings, data_agent_id=data_agent_id)
 
 
 def get_agent(settings: Settings) -> geminidataanalytics.DataAgent | None:
