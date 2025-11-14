@@ -19,7 +19,7 @@ st.set_page_config(
 
 st.title("Analytics Data Agent – Streamlit sandbox")
 st.caption(
-    "Interface légère pour piloter les endpoints FastAPI exposés dans app/api.py."
+    "Lightweight interface to drive the FastAPI endpoints exposed in app/api.py."
 )
 
 
@@ -59,10 +59,10 @@ def render_response(response: requests.Response) -> None:
         f"**Status:** {response.status_code} "
         f"{'✅' if response.ok else '⚠️'} – {response.reason}"
     )
-    st.write(f"URL appelée : `{response.request.method} {response.request.url}`")
-    st.write(f"Durée : {response.elapsed.total_seconds():.2f}s")
+    st.write(f"Requested URL: `{response.request.method} {response.request.url}`")
+    st.write(f"Duration: {response.elapsed.total_seconds():.2f}s")
 
-    with st.expander("Headers de réponse"):
+    with st.expander("Response headers"):
         st.json(dict(response.headers))
 
     parsed_json = _format_json(response.text)
@@ -70,16 +70,16 @@ def render_response(response: requests.Response) -> None:
         st.subheader("Payload JSON")
         st.json(parsed_json)
     elif response.text:
-        st.subheader("Payload brut")
+        st.subheader("Raw payload")
         st.code(response.text)
     else:
-        st.info("La réponse ne contient pas de corps.")
+        st.info("The response has no body.")
 
 
 with st.sidebar:
     base_url = st.text_input("API base URL", value=DEFAULT_BASE_URL)
     timeout = st.slider(
-        "Timeout requêtes (s)",
+        "Request timeout (s)",
         min_value=5,
         max_value=120,
         value=DEFAULT_TIMEOUT,
@@ -110,8 +110,8 @@ tab_health, tab_agent, tab_chat = st.tabs(
 
 with tab_health:
     st.subheader("Ping /health")
-    st.write("Permet de vérifier que l'API répond bien avant d'aller plus loin.")
-    if st.button("Appeler GET /health", type="primary", use_container_width=True):
+    st.write("Lets you confirm the API responds before going further.")
+    if st.button("Call GET /health", type="primary", use_container_width=True):
         try:
             response = call_api(
                 "GET",
@@ -122,18 +122,16 @@ with tab_health:
             )
             render_response(response)
         except requests.RequestException as exc:
-            st.error(f"Échec de la requête: {exc}")
+            st.error(f"Request failed: {exc}")
 
 
 with tab_agent:
-    st.subheader("Pilotage de l'agent Gemini Data Analytics")
+    st.subheader("Gemini Data Analytics agent management")
 
     col_get, col_list = st.columns(2)
     with col_get:
-        st.markdown("**GET /agent** – lecture de l'agent configuré.")
-        if st.button(
-            "Récupérer l'agent", key="btn_get_agent", use_container_width=True
-        ):
+        st.markdown("**GET /agent** – read the configured agent.")
+        if st.button("Fetch agent", key="btn_get_agent", use_container_width=True):
             try:
                 response = call_api(
                     "GET",
@@ -144,13 +142,11 @@ with tab_agent:
                 )
                 render_response(response)
             except requests.RequestException as exc:
-                st.error(f"Erreur: {exc}")
+                st.error(f"Error: {exc}")
 
     with col_list:
-        st.markdown("**GET /agents** – liste des agents disponibles.")
-        if st.button(
-            "Lister les agents", key="btn_list_agents", use_container_width=True
-        ):
+        st.markdown("**GET /agents** – list the available agents.")
+        if st.button("List agents", key="btn_list_agents", use_container_width=True):
             try:
                 response = call_api(
                     "GET",
@@ -161,18 +157,18 @@ with tab_agent:
                 )
                 render_response(response)
             except requests.RequestException as exc:
-                st.error(f"Erreur: {exc}")
+                st.error(f"Error: {exc}")
 
     st.divider()
-    st.markdown("### Synchronisation de l'agent (/agent)")
+    st.markdown("### Agent synchronization (/agent)")
     sync_cols = st.columns(2)
     with sync_cols[0]:
-        st.markdown("Créer l'agent s'il n'existe pas.")
+        st.markdown("Create the agent if it does not yet exist.")
         create_agent_id = st.text_input(
             "Data agent ID (optionnel)",
             key="create_agent_id_input",
             placeholder="senior_residence_analytics_agent",
-            help="Laisse vide pour utiliser la valeur de l'environnement backend.",
+            help="Leave empty to fall back to the backend environment value.",
         )
         if st.button("POST /agent", key="btn_create_agent", use_container_width=True):
             payload = None
@@ -189,10 +185,10 @@ with tab_agent:
                 )
                 render_response(response)
             except requests.RequestException as exc:
-                st.error(f"Erreur: {exc}")
+                st.error(f"Error: {exc}")
 
     with sync_cols[1]:
-        st.markdown("Mettre à jour la définition déjà déployée.")
+        st.markdown("Update the definition that is already deployed.")
         if st.button("PUT /agent", key="btn_update_agent", use_container_width=True):
             try:
                 response = call_api(
@@ -204,12 +200,12 @@ with tab_agent:
                 )
                 render_response(response)
             except requests.RequestException as exc:
-                st.error(f"Erreur: {exc}")
+                st.error(f"Error: {exc}")
 
     st.divider()
-    st.markdown("### Suppression ciblée (/agent/{agent_id})")
+    st.markdown("### Targeted deletion (/agent/{agent_id})")
     with st.form("delete_agent_form"):
-        agent_id = st.text_input("ID de l'agent à supprimer")
+        agent_id = st.text_input("ID of the agent to delete")
         force = st.checkbox("Force delete (ignore PRECONDITION_FAILED)")
         delete_submitted = st.form_submit_button(
             "DELETE /agent/{agent_id}", use_container_width=True
@@ -217,7 +213,7 @@ with tab_agent:
 
     if delete_submitted:
         if not agent_id:
-            st.warning("Merci de fournir un identifiant d'agent.")
+            st.warning("Please provide an agent identifier.")
         else:
             try:
                 response = call_api(
@@ -229,37 +225,37 @@ with tab_agent:
                     params={"force": str(force).lower()},
                 )
                 if response.status_code == 204:
-                    st.success("Suppression demandée avec succès (204 No Content).")
+                    st.success("Deletion requested successfully (204 No Content).")
                 render_response(response)
             except requests.RequestException as exc:
-                st.error(f"Erreur: {exc}")
+                st.error(f"Error: {exc}")
 
 
 with tab_chat:
-    st.subheader("Playground de discussion (/chat)")
+    st.subheader("Chat playground (/chat)")
     st.write(
-        "Définis une question, optionnellement un `conversation_id`, "
-        "et coche `preview` pour activer la génération SQL."
+        "Define a question, optionally add a `conversation_id`, "
+        "and tick `preview` to enable SQL generation."
     )
 
     with st.form("chat_form"):
         question = st.text_area(
             "Question",
             height=150,
-            placeholder="Ex: Donne-moi la facturation moyenne par résident.",
+            placeholder="Ex: Give me the average billing per resident.",
         )
         conversation_id = st.text_input(
             "Conversation ID (optionnel)",
             placeholder="api-123...",
         )
-        preview = st.checkbox("Mode preview (retour SQL)", value=False)
+        preview = st.checkbox("Preview mode (SQL response)", value=False)
         submitted = st.form_submit_button(
-            "Envoyer la requête POST /chat", use_container_width=True
+            "Send the POST /chat request", use_container_width=True
         )
 
     if submitted:
         if not question.strip():
-            st.warning("La question est obligatoire.")
+            st.warning("The question is required.")
         else:
             payload: dict[str, Any] = {
                 "question": question.strip(),
@@ -278,15 +274,15 @@ with tab_chat:
                     json_body=payload,
                 )
             except requests.RequestException as exc:
-                st.error(f"Erreur: {exc}")
+                st.error(f"Error: {exc}")
             else:
                 if not response.ok:
                     render_response(response)
                 else:
                     data = response.json()
                     st.success(f"Conversation ID: {data.get('conversation_id', 'N/A')}")
-                    st.markdown("**Réponse:**")
-                    st.write(data.get("answer") or "(Réponse vide)")
+                    st.markdown("**Answer:**")
+                    st.write(data.get("answer") or "(Empty answer)")
                     if data.get("generated_sql"):
-                        st.markdown("**SQL généré:**")
+                        st.markdown("**Generated SQL:**")
                         st.code(data["generated_sql"], language="sql")

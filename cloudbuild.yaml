@@ -1,6 +1,7 @@
 # substitutions:
 #   _ENV: "dev"
 #   _REGION: "europe-west1"
+#   _TF_ENV: "uat"
 #   # Le nom du repo Artifact Registry doit exister ou être créé préalablement
 #   _REPO: "analytics-agents-dev"
 
@@ -20,6 +21,21 @@ steps:
         "push",
         "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/analytics-agent:${_ENV}"
       ]
+    id: "push-image"
+
+  - name: hashicorp/terraform:1.6.6
+    id: "terraform-apply"
+    entrypoint: /bin/sh
+    env:
+      - "TF_WORKDIR=infra/terraform/envs/${_TF_ENV}"
+      - "NEW_IMAGE=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/analytics-agent:${_ENV}"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        cd "${TF_WORKDIR}"
+        terraform init -backend-config=backend.tfvars
+        terraform apply -auto-approve -var-file=terraform.tfvars -var="run_image=${NEW_IMAGE}"
 
 images:
   - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/analytics-agent:${_ENV}"
