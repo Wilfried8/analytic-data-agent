@@ -2,20 +2,16 @@
 
 import argparse
 import json
-import sys
-from pathlib import Path
 from google.cloud import geminidataanalytics
-
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from app.agent_service import get_agent, list_agents
 from app.config import load_settings
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Inspect Gemini Data Analytics agents.")
+    parser = argparse.ArgumentParser(
+        description="Inspect Gemini Data Analytics agents."
+    )
     parser.add_argument(
         "--all",
         action="store_true",
@@ -33,7 +29,11 @@ def main() -> None:
     if args.all:
         agents = list_agents(settings)
         if args.json:
-            print(json.dumps([agent_to_dict(agent) for agent in agents], indent=2, default=str))
+            print(
+                json.dumps(
+                    [agent_to_dict(agent) for agent in agents], indent=2, default=str
+                )
+            )
         else:
             for agent in agents:
                 print_summary(agent)

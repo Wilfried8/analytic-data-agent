@@ -2,19 +2,15 @@
 
 import argparse
 import logging
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from app.agent_service import create_or_update_agent
 from app.config import load_settings
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Create or fetch the data agent context.")
+    parser = argparse.ArgumentParser(
+        description="Create or fetch the data agent context."
+    )
     parser.add_argument(
         "--no-update",
         action="store_true",
@@ -22,7 +18,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(levelname)s %(name)s: %(message)s"
+    )
     settings = load_settings()
     agent = create_or_update_agent(settings, allow_update=not args.no_update)
     print(agent)

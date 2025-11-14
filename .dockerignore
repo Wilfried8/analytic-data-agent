@@ -1,0 +1,11 @@
+.git
+.gitignore
+__pycache__
+.venv
+*.pyc
+infra/
+terraform/
+*.log
+chat_transcript.json
+index.html
+.env

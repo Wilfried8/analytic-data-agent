@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any, cast
 
 from google.api_core import exceptions
 from google.cloud import geminidataanalytics
+from google.protobuf import field_mask_pb2
 
 from .config import Settings
 
@@ -18,7 +20,9 @@ def _load_system_instruction(path: Path) -> str:
         raise RuntimeError(f"System instruction file not found: {path}") from exc
 
 
-def build_datasource_references(settings: Settings) -> geminidataanalytics.DatasourceReferences:
+def build_datasource_references(
+    settings: Settings,
+) -> geminidataanalytics.DatasourceReferences:
     residents_ref = geminidataanalytics.BigQueryTableReference(
         project_id=settings.project_id,
         dataset_id=settings.dataset,
@@ -36,17 +40,9 @@ def build_datasource_references(settings: Settings) -> geminidataanalytics.Datas
     )
 
 
-def create_or_update_agent(
-    settings: Settings,
-    *,
-    allow_update: bool = True,
-) -> geminidataanalytics.DataAgent:
-    """Create the data agent. Optionally fetch it if it already exists."""
-    client = geminidataanalytics.DataAgentServiceClient()
-    parent = client.common_location_path(settings.project_id, settings.location)
+def _build_context(settings: Settings) -> geminidataanalytics.Context:
     system_instruction = _load_system_instruction(settings.system_instruction_path)
-
-    context = geminidataanalytics.Context(
+    return geminidataanalytics.Context(
         system_instruction=system_instruction,
         datasource_references=build_datasource_references(settings),
         options=geminidataanalytics.ConversationOptions(
@@ -55,31 +51,83 @@ def create_or_update_agent(
             )
         ),
     )
-    data_agent = geminidataanalytics.DataAgent(
+
+
+def _build_data_agent(settings: Settings) -> geminidataanalytics.DataAgent:
+    return geminidataanalytics.DataAgent(
         data_analytics_agent=geminidataanalytics.DataAnalyticsAgent(
-            published_context=context
+            published_context=_build_context(settings)
         )
     )
+
+
+def _maybe_await_operation(response: Any) -> Any:
+    """Unwrap long running operations returned by the API."""
+    if hasattr(response, "result"):
+        return response.result()
+    return response
+
+
+def create_agent(
+    settings: Settings, data_agent_id: str | None = None
+) -> geminidataanalytics.DataAgent:
+    """Create the data agent. Raises AlreadyExists if the agent is present."""
+    client = geminidataanalytics.DataAgentServiceClient()
+    parent = client.common_location_path(settings.project_id, settings.location)
+    agent_identifier = data_agent_id or settings.data_agent_id
     request = geminidataanalytics.CreateDataAgentRequest(
         parent=parent,
-        data_agent_id=settings.data_agent_id,
-        data_agent=data_agent,
+        data_agent_id=agent_identifier,
+        data_agent=_build_data_agent(settings),
     )
+    response = client.create_data_agent(request=request)
+    agent = cast(geminidataanalytics.DataAgent, _maybe_await_operation(response))
+    logger.info("Data agent created: %s", agent.name)
+    return agent
+
+
+def update_agent(
+    settings: Settings, data_agent_id: str | None = None
+) -> geminidataanalytics.DataAgent:
+    """Update the existing data agent definition."""
+    client = geminidataanalytics.DataAgentServiceClient()
+    agent_identifier = data_agent_id or settings.data_agent_id
+    name = client.data_agent_path(
+        settings.project_id, settings.location, agent_identifier
+    )
+    data_agent = _build_data_agent(settings)
+    data_agent.name = name
+    update_mask = field_mask_pb2.FieldMask(
+        paths=["data_analytics_agent.published_context"]
+    )
+    response = client.update_data_agent(
+        request=geminidataanalytics.UpdateDataAgentRequest(
+            data_agent=data_agent,
+            update_mask=update_mask,
+        )
+    )
+    agent = cast(geminidataanalytics.DataAgent, _maybe_await_operation(response))
+    logger.info("Data agent updated: %s", agent.name)
+    return agent
+
+
+def create_or_update_agent(
+    settings: Settings,
+    *,
+    allow_update: bool = True,
+    data_agent_id: str | None = None,
+) -> geminidataanalytics.DataAgent:
+    """Create the data agent. Optionally update it if it already exists."""
     try:
-        response = client.create_data_agent(request=request)
-        logger.info("Data agent created: %s", response.name)
-        return response
+        return create_agent(settings, data_agent_id=data_agent_id)
     except exceptions.AlreadyExists:
         if not allow_update:
             raise
         logger.info(
-            "Agent %s already exists; fetching current definition.",
-            settings.data_agent_id,
+            "Agent %s already exists; attempting update.",
+            data_agent_id or settings.data_agent_id,
         )
-        name = client.data_agent_path(
-            settings.project_id, settings.location, settings.data_agent_id
-        )
-        return client.get_data_agent(request=geminidataanalytics.GetDataAgentRequest(name=name))
+        return update_agent(settings, data_agent_id=data_agent_id)
 
 
 def get_agent(settings: Settings) -> geminidataanalytics.DataAgent | None:
@@ -88,7 +136,9 @@ def get_agent(settings: Settings) -> geminidataanalytics.DataAgent | None:
         settings.project_id, settings.location, settings.data_agent_id
     )
     try:
-        return client.get_data_agent(request=geminidataanalytics.GetDataAgentRequest(name=name))
+        return client.get_data_agent(
+            request=geminidataanalytics.GetDataAgentRequest(name=name)
+        )
     except exceptions.NotFound:
         return None
 
@@ -96,20 +146,35 @@ def get_agent(settings: Settings) -> geminidataanalytics.DataAgent | None:
 def list_agents(settings: Settings) -> list[geminidataanalytics.DataAgent]:
     client = geminidataanalytics.DataAgentServiceClient()
     parent = client.common_location_path(settings.project_id, settings.location)
-    return list(client.list_data_agents(request=geminidataanalytics.ListDataAgentsRequest(parent=parent)))
+    return list(
+        client.list_data_agents(
+            request=geminidataanalytics.ListDataAgentsRequest(parent=parent)
+        )
+    )
 
 
-def delete_agent(settings: Settings, *, force: bool = False) -> None:
+def delete_agent(
+    settings: Settings, agent_id: str | None = None, *, force: bool = False
+) -> bool:
     client = geminidataanalytics.DataAgentServiceClient()
+    agent_identifier = agent_id or settings.data_agent_id
     name = client.data_agent_path(
-        settings.project_id, settings.location, settings.data_agent_id
+        settings.project_id, settings.location, agent_identifier
     )
     try:
-        client.delete_data_agent(request=geminidataanalytics.DeleteDataAgentRequest(name=name))
+        response = client.delete_data_agent(
+            request=geminidataanalytics.DeleteDataAgentRequest(name=name)
+        )
+        _maybe_await_operation(response)
         logger.info("Agent deletion requested: %s", name)
+        return True
     except exceptions.NotFound:
         logger.warning("Agent %s not found. Nothing to delete.", name)
+        return False
     except exceptions.FailedPrecondition as exc:
         if not force:
             raise
-        logger.warning("Deletion failed due to state=%s; ignoring because force=True", exc)
+        logger.warning(
+            "Deletion failed due to state=%s; ignoring because force=True", exc
+        )
+        return False

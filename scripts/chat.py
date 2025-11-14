@@ -2,12 +2,6 @@
 
 import argparse
 import uuid
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from app.chat_service import interactive_chat, scripted_chat
 from app.config import load_settings
@@ -19,7 +13,9 @@ def main() -> None:
         "--conversation-id",
         help="Existing conversation identifier; defaults to a generated ID.",
     )
-    parser.add_argument("--preview", action="store_true", help="Enable chart preview server.")
+    parser.add_argument(
+        "--preview", action="store_true", help="Enable chart preview server."
+    )
     parser.add_argument(
         "--interactive",
         action="store_true",
